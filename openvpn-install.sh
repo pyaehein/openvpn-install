@@ -234,9 +234,6 @@ function installQuestions() {
 		# Detect public IPv6 address
 		IP=$(ip -6 addr | sed -ne 's|^.* inet6 \([^/]*\)/.* scope global.*$|\1|p' | head -1)
 	fi
-	APPROVE_IP=${APPROVE_IP:-n}
-	if [[ $APPROVE_IP =~ n ]]; then
-	fi
 	# If $IP is a private IP address, the server must be behind NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
 		echo ""
@@ -366,7 +363,7 @@ function installQuestions() {
 	echo "See https://github.com/angristan/openvpn-install#security-and-encryption to learn more."
 	echo ""
 	until [[ $CUSTOMIZE_ENC =~ (y|n) ]]; do
-		read -rp "Customize encryption settings? [y/n]: " -e -i n CUSTOMIZE_ENC
+		CUSTOMIZE_ENC="n"
 	done
 	if [[ $CUSTOMIZE_ENC == "n" ]]; then
 		# Use default, sane and fast parameters
