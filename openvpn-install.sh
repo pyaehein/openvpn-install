@@ -236,7 +236,6 @@ function installQuestions() {
 	fi
 	APPROVE_IP=${APPROVE_IP:-n}
 	if [[ $APPROVE_IP =~ n ]]; then
-		read -rp "IP address: " -e -i "$IP" IP
 	fi
 	# If $IP is a private IP address, the server must be behind NAT
 	if echo "$IP" | grep -qE '^(10\.|172\.1[6789]\.|172\.2[0-9]\.|172\.3[01]\.|192\.168)'; then
@@ -268,40 +267,20 @@ function installQuestions() {
 	fi
 	echo ""
 	# Ask the user if they want to enable IPv6 regardless its availability.
-	until [[ $IPV6_SUPPORT =~ (y|n) ]]; do
-		read -rp "Do you want to enable IPv6 support (NAT)? [y/n]: " -e -i $SUGGESTION IPV6_SUPPORT
-	done
+	IPV6_SUPPORT="n"
 	echo ""
 	echo "What port do you want OpenVPN to listen to?"
 	echo "   1) Default: 1194"
 	echo "   2) Custom"
 	echo "   3) Random [49152-65535]"
-	until [[ $PORT_CHOICE =~ ^[1-3]$ ]]; do
-		read -rp "Port choice [1-3]: " -e -i 1 PORT_CHOICE
-	done
-	case $PORT_CHOICE in
-	1)
-		PORT="1194"
-		;;
-	2)
-		until [[ $PORT =~ ^[0-9]+$ ]] && [ "$PORT" -ge 1 ] && [ "$PORT" -le 65535 ]; do
-			read -rp "Custom port [1-65535]: " -e -i 1194 PORT
-		done
-		;;
-	3)
-		# Generate random number within private ports range
-		PORT=$(shuf -i49152-65535 -n1)
-		echo "Random Port: $PORT"
-		;;
-	esac
+	PORT_CHOICE="2"
+	PORT="443"
 	echo ""
 	echo "What protocol do you want OpenVPN to use?"
 	echo "UDP is faster. Unless it is not available, you shouldn't use TCP."
 	echo "   1) UDP"
 	echo "   2) TCP"
-	until [[ $PROTOCOL_CHOICE =~ ^[1-2]$ ]]; do
-		read -rp "Protocol [1-2]: " -e -i 1 PROTOCOL_CHOICE
-	done
+	PROTOCOL_CHOICE="1"
 	case $PROTOCOL_CHOICE in
 	1)
 		PROTOCOL="udp"
@@ -326,7 +305,7 @@ function installQuestions() {
 	echo "   12) NextDNS (Anycast: worldwide)"
 	echo "   13) Custom"
 	until [[ $DNS =~ ^[0-9]+$ ]] && [ "$DNS" -ge 1 ] && [ "$DNS" -le 13 ]; do
-		read -rp "DNS [1-12]: " -e -i 11 DNS
+		DNS="9"
 		if [[ $DNS == 2 ]] && [[ -e /etc/unbound/unbound.conf ]]; then
 			echo ""
 			echo "Unbound is already installed."
@@ -358,7 +337,7 @@ function installQuestions() {
 	echo ""
 	echo "Do you want to use compression? It is not recommended since the VORACLE attack makes use of it."
 	until [[ $COMPRESSION_ENABLED =~ (y|n) ]]; do
-		read -rp"Enable compression? [y/n]: " -e -i n COMPRESSION_ENABLED
+		COMPRESSION_ENABLED="n"
 	done
 	if [[ $COMPRESSION_ENABLED == "y" ]]; then
 		echo "Choose which compression algorithm you want to use: (they are ordered by efficiency)"
@@ -366,7 +345,7 @@ function installQuestions() {
 		echo "   2) LZ4"
 		echo "   3) LZ0"
 		until [[ $COMPRESSION_CHOICE =~ ^[1-3]$ ]]; do
-			read -rp"Compression algorithm [1-3]: " -e -i 1 COMPRESSION_CHOICE
+			COMPRESSION_CHOICE="n"
 		done
 		case $COMPRESSION_CHOICE in
 		1)
@@ -1061,7 +1040,7 @@ function newClient() {
 	echo "The name must consist of alphanumeric character. It may also include an underscore or a dash."
 
 	until [[ $CLIENT =~ ^[a-zA-Z0-9_-]+$ ]]; do
-		read -rp "Client name: " -e CLIENT
+		CLIENT="vpn"
 	done
 
 	echo ""
@@ -1071,7 +1050,7 @@ function newClient() {
 	echo "   2) Use a password for the client"
 
 	until [[ $PASS =~ ^[1-2]$ ]]; do
-		read -rp "Select an option [1-2]: " -e -i 1 PASS
+		PASS="1"
 	done
 
 	CLIENTEXISTS=$(tail -n +2 /etc/openvpn/easy-rsa/pki/index.txt | grep -c -E "/CN=$CLIENT\$")
